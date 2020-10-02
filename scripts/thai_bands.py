@@ -1,6 +1,7 @@
 import os
 import re
 import pandas as pd
+from tqdm.notebook import tqdm
 from bs4 import BeautifulSoup
 from urllib.parse import urljoin
 
@@ -19,6 +20,15 @@ client_credentials_manager = SpotifyClientCredentials(
 sp = spotipy.Spotify(
     client_credentials_manager=client_credentials_manager
 )
+
+def find_band_spotify(band_name):
+    """
+    For a given band name, find Spotify profile
+    """
+    results = sp.search(q='artist:' + band_name, type='artist')
+    items = results['artists']['items']
+    return items
+
 
 def get_thai_bands():
     """
@@ -40,6 +50,10 @@ def get_thai_bands():
     bands_df["band_name_english"] = bands_df.band_name.map(
         lambda s: re.search(r'\((.*?)\)', s).group(1) if re.search(r'\((.*?)\)', s) is not None else ""
     )
+    bands_df['band_name_thai'] = [
+        r['band_name'].replace("(", "").replace(")", "").replace(r.band_name_english, '')
+        for _, r in bands_df.iterrows()
+    ]
     bands_df['url']  = bands_df['url'].map(
         lambda x: urljoin("https://th.wikipedia.org/", x) if x.startswith("/wiki/") else ""
     )
