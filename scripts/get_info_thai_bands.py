@@ -59,3 +59,40 @@ def get_thai_bands():
     )
     return bands_df
 
+
+def find_spotify_band(bands_df):
+    """
+    Find band profile's on Spotify in Thai/English
+    """
+    search_results = []
+    for _, r in tqdm(bands_df.iterrows()):
+        search_result_en, search_result_th = [], []
+        if r.band_name_english != "":
+            search_result_en = find_band_spotify(r.band_name_english)
+        if r.band_name_thai != "":
+            search_result_th = find_band_spotify(r.band_name_thai)
+        search_results.append({
+            "band_name_th": r.band_name_thai,
+            "band_name_en": r.band_name_english,
+            "url": r.url,
+            "spotify_profiles": search_result_en + search_result_th
+        })
+    return search_results
+
+
+def flatten_search_results(search_results):
+    """
+    Flatten search results to be annotated (Thai band or not)
+    """
+    flatten_results = []
+    for result in search_results:
+        for ls in result['spotify_profiles']:
+            flatten_results.append({
+                'band_name_th': result['band_name_th'],
+                'band_name_en': result['band_name_en'],
+                'spotify_band_name': ls['name'],
+                'spotify_url': ls['external_urls']['spotify'],
+                'image': ls['images'][1]['url'] if len(ls['images']) > 0 else "",
+                'uri': ls['uri']
+            })
+    return flatten_results
